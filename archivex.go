@@ -18,6 +18,9 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/apex/log"
+	"github.com/dustin/go-humanize"
 )
 
 // interface
@@ -173,6 +176,7 @@ func (z *ZipFile) AddFileWithName(name string, filepath string) error {
 func (z *ZipFile) AddAll(dir string, includeCurrentFolder bool) error {
 	dir = path.Clean(dir)
 	return addAll(dir, dir, includeCurrentFolder, func(info os.FileInfo, file io.Reader, entryName string) (err error) {
+		log.Debugf("%s – %s", entryName, humanize.Bytes(uint64(info.Size())))
 
 		// Create a header based off of the fileinfo
 		header, err := zip.FileInfoHeader(info)
@@ -392,8 +396,7 @@ func (t *TarFile) Close() error {
 }
 
 func getSubDir(dir string, rootDir string, includeCurrentFolder bool) (subDir string) {
-
-	subDir = strings.Replace(dir, rootDir, "", 1)
+	subDir = strings.TrimPrefix(dir, rootDir)
 	// Remove leading slashes, since this is intentionally a subdirectory.
 	if len(subDir) > 0 && subDir[0] == os.PathSeparator {
 		subDir = subDir[1:]
@@ -410,7 +413,6 @@ func getSubDir(dir string, rootDir string, includeCurrentFolder bool) (subDir st
 
 // addAll is used to recursively go down through directories and add each file and directory to an archive, based on an ArchiveWriteFunc given to it
 func addAll(dir string, rootDir string, includeCurrentFolder bool, writerFunc ArchiveWriteFunc) error {
-
 	// Get a list of all entries in the directory, as []os.FileInfo
 	fileInfos, err := ioutil.ReadDir(dir)
 	if err != nil {
@@ -447,7 +449,6 @@ func addAll(dir string, rootDir string, includeCurrentFolder bool, writerFunc Ar
 			if err := file.Close(); err != nil {
 				return err
 			}
-
 		}
 
 		// If the entry is a directory, recurse into it

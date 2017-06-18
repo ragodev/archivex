@@ -12,6 +12,8 @@ import (
 	"path"
 	"reflect"
 	"testing"
+
+	"github.com/tj/assert"
 )
 
 type archTest struct {
@@ -98,4 +100,9 @@ func Test_archivex(t *testing.T) {
 			arch.Close()
 		}
 	}
+}
+
+func Test_getSubDir(t *testing.T) {
+	dir := getSubDir("node_modules/graph.ql/lib/index.js", ".", false)
+	assert.Equal(t, "node_modules/graph.ql/lib/index.js", dir)
 }
